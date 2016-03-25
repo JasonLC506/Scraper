@@ -21,16 +21,21 @@ time.sleep(1)
 
 
 DATE_LAUNCH = datetime.strptime("March01 2016", "%B%d %Y")
-TIME_SCROLL = 5
+TIME_SCROLL = 20
+TIME_NEWPAGE = 10
 MAX_POSTS_PER = 20
+MAX_SHOW_MORE = 1000000
 
-
-def PostsText(url):
+def PostsFetch(url):
     driver.get(url)
     posts = []
     ######### scroll down ############
     ele_html = driver.find_element_by_tag_name("html")
-    ele_posts = driver.find_elements_by_xpath("//div[@class='userContentWrapper _5pcr']")
+    try:
+        ele_posts = driver.find_elements_by_xpath("//div[@class='userContentWrapper _5pcr']")
+    except exceptions.NoSuchElementException, e:
+        print "no posts"
+        return posts
     old_len = 0
     while len(ele_posts) > old_len and old_len < MAX_POSTS_PER:
         old_len = len(ele_posts)
@@ -52,34 +57,52 @@ def PostsText(url):
         ele_time_post = ele_post.find_element_by_xpath(".//span[@class='timestampContent']")
         time_post = TimeParse(ele_time_post.text)
         if time_post < DATE_LAUNCH:
-            break
-        # print "dada"
+            break # default the post order in ele_posts is temporal
+
         likerlist = {}
         text = ""
+        url_post = ""
+        
+        ####### url_post ###########
+        try:
+            ele_url_post = ele_post.find_element_by_xpath(".//a[@class = '_5pcq']")
+            url_post = ele_url_post.get_attribute("href")
+        except exceptions.NoSuchElementException, e:
+            print "inormal post"
+            continue
         ####### text ###########
         try:
             ele_text = ele_post.find_element_by_xpath(".//div[@class='_5pbx userContent']/p")
             text = ele_text.text
         except exceptions.NoSuchElementException, e:
             print "no text"
-            continue
-        ####### likerlist #########
+            #continue
+        ####### url_liker #########
         try:
             ele_liker_link = ele_post.find_element_by_xpath(".//a[@class='_2x4v']")
             link_url = ele_liker_link.get_attribute("href")
-            likerlist["url"] = link_url
+            likerlist["url_liker"] = link_url
         except exceptions.NoSuchElementException, e:
             print "no likes"
-        post = {"text": text, "likerlist": likerlist}
+            
+        post = {"url_post": url_post, "text": text, "likerlist": likerlist}
         posts.append(post)
+    ############ crawl likers #################   
     for post in posts:
         post["likerlist"] = Likers(post["likerlist"])
+        time_sleep = random.random() * TIME_NEWPAGE
+        time.sleep(time_sleep)        
     print posts
     return posts
 
 def Likers(likerlist):
-    link_url = likerlist["url"]
+    link_url = likerlist["url_liker"]
     driver.get(link_url)
+    ########### show all #############
+    for i in range(MAX_SHOW_MORE):
+        driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div").click()
+        time_sleep = random.random() * TIME_SCROLL
+        time.sleep(time_sleep)    
     ele_ul = driver.find_element_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']")
     ele_lis = ele_ul.find_elements_by_xpath("./li")
     for ele_li in ele_lis:
@@ -108,6 +131,7 @@ def TimeParse(str):
         time_post = words[0] + words[1] + " 2016"
         time_post = datetime.strptime(time_post, "%B%d %Y")
         return time_post
-
-url = "https://www.facebook.com/playboy/?fref=nf"
-PostsText(url)
+        
+if __name__ =="__main__":
+    url = "https://www.facebook.com/playboy/?fref=nf"
+    PostsFetch(url)
