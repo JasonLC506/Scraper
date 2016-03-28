@@ -22,7 +22,8 @@ time.sleep(1)
 DATE_LAUNCH = datetime.strptime("March01 2016", "%B%d %Y")
 TIME_SCROLL = 20
 TIME_NEWPAGE = 10
-MAX_SHOW_MORE = 1000000
+MAX_SHOW_MORE = 10000
+
 
 def PosterPost(root, posters):
     ##### BFS find large set of poster through post-like relation ####
@@ -62,20 +63,25 @@ def PosterPost(root, posters):
         driver.get(url_liker)
         ########### show all #############
         for i in range(MAX_SHOW_MORE):
+            print "%dth show more" % i
             driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div").click()
             time_sleep = random.random() * TIME_SCROLL
-            time.sleep(time_sleep)  
+            time.sleep(time_sleep)
         ele_likers = driver.find_elements_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']\
         /li//a[@class ='_5i_s _8o _8r lfloat _ohe']")
         for ele_liker in ele_likers:
             liker = ele_liker.get_attribute("href")
             if liker not in posters:
                 posters.append(liker)
+                resultfile = open("poster.txt", "a")
+                resultfile.write("%s\n" % liker)
+                resultfile.close()
         time_sleep = random.random() * TIME_NEWPAGE
-        time.sleep(time_sleep)      
-    
+        time.sleep(time_sleep)
     return posters
-def PosterBSF(root, depth = 1):
+
+
+def PosterBSF(root, depth=1):
     posters = []
     posters = PosterPost(root, posters)
     ind_new_poster = 0
@@ -85,7 +91,9 @@ def PosterBSF(root, depth = 1):
             posters = PosterPost(posters[i], posters)
         ind_new_poster = L
     print "crawl %d posters" % len(posters)
-    return posters    
-    
-print len(PosterPost("https://www.facebook.com/zuck",[]))
-        
+    return posters
+
+
+if __name__ == "__main__":
+    posters = PosterBSF("https://www.facebook.com/zuck")
+    print len(posters)
