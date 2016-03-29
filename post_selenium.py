@@ -184,7 +184,7 @@ if __name__ =="__main__":
     for i in range(k):
         posterfile.readline()
 
-    posters = posterfile.readline() #test
+    posters = posterfile.readlines()
     print "total %d posters" % len(posters)
     posterfile.close()
     for poster in posters:
