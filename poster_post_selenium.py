@@ -5,8 +5,8 @@ import selenium.common.exceptions as exceptions
 import time
 from datetime import datetime
 import random
-import re
 from post_selenium import TimeParse
+
 
 driver = webdriver.Firefox()
 driver.implicitly_wait(30)
@@ -22,6 +22,7 @@ time.sleep(1)
 DATE_LAUNCH = datetime.strptime("March01 2016", "%B%d %Y")
 TIME_SCROLL = 20
 TIME_NEWPAGE = 10
+TIME_LOAD = 2
 MAX_SHOW_MORE = 10000
 
 
@@ -40,13 +41,17 @@ def PosterPost(root, posters):
     old_len = 0
     while len(ele_posts) > old_len:
         old_len = len(ele_posts)
+        print "old_len is %d" % old_len
         ele_html.send_keys(Keys.END)
+        time.sleep(TIME_LOAD)
         ele_posts = driver.find_elements_by_xpath("//div[@class='userContentWrapper _5pcr']")
+        print "new_len is %d" % len(ele_posts)
         ####### later than emoticon launch ######
         ele_post = ele_posts[len(ele_posts) - 1]
         ele_time_post = ele_post.find_element_by_xpath(".//span[@class='timestampContent']")
         time_post = TimeParse(ele_time_post.text)
         if time_post < DATE_LAUNCH:
+            print "too early"
             break
         time_sleep = random.random() * TIME_SCROLL
         time.sleep(time_sleep)
@@ -62,20 +67,30 @@ def PosterPost(root, posters):
     for url_liker in url_likers:
         driver.get(url_liker)
         ########### show all #############
+        liker_old = 0
         for i in range(MAX_SHOW_MORE):
             print "%dth show more" % i
-            driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div").click()
+            ele_showmore = driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div/a")
+            ele_showmore.click()
+            time.sleep(TIME_LOAD)
+            ele_likers = driver.find_elements_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']\
+            /li//a[@class ='_5i_s _8o _8r lfloat _ohe']")
+            if len(ele_likers) == liker_old:
+                print "no more"
+                break
+            else:
+                liker_old = len(ele_likers)
+            resultfile = open("poster.txt", "a")
+            for ele_liker in ele_likers:
+                liker = ele_liker.get_attribute("href")
+                if liker not in posters:
+                    posters.append(liker)
+                    resultfile.write("%s\n" % liker)
+            resultfile.close()
             time_sleep = random.random() * TIME_SCROLL
             time.sleep(time_sleep)
-        ele_likers = driver.find_elements_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']\
-        /li//a[@class ='_5i_s _8o _8r lfloat _ohe']")
-        for ele_liker in ele_likers:
-            liker = ele_liker.get_attribute("href")
-            if liker not in posters:
-                posters.append(liker)
-                resultfile = open("poster.txt", "a")
-                resultfile.write("%s\n" % liker)
-                resultfile.close()
+        print "%d posters until now" % len(posters)
+        print datetime.now()
         time_sleep = random.random() * TIME_NEWPAGE
         time.sleep(time_sleep)
     return posters
