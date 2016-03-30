@@ -178,10 +178,10 @@ def TimeParse(str):
         
 if __name__ =="__main__":
     posts = []
-    n = 10    ### crawl n posters
+    n = 10000    ### crawl n posters
     posterfile = open("poster.txt","r")
     ######### skip first k posters #####
-    k = 3     ### skip first k posters
+    k = 0     ### skip first k posters
     for i in range(k):
         posterfile.readline()
     ######### crawl n posters ###########
