@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 import random
 from NumberParse import NumberParse
-import cPickle
+
 
 driver = webdriver.Firefox()
 driver.implicitly_wait(30)
@@ -178,22 +178,29 @@ def TimeParse(str):
         
 if __name__ =="__main__":
     posts = []
+    n = 10    ### crawl n posters
     posterfile = open("poster.txt","r")
     ######### skip first k posters #####
-    k = 0
+    k = 3     ### skip first k posters
     for i in range(k):
         posterfile.readline()
-
-    posters = posterfile.readlines()
+    ######### crawl n posters ###########
+    posters = []
+    for i in range(n):
+        posters.append(posterfile.readline())
     print "total %d posters" % len(posters)
     posterfile.close()
+    i = k
     for poster in posters:
+        print "%dth poster" % (i+1)
         url = poster.rstrip()
         poster_post = {}
         poster_post[url]=PostsFetch(url)
         posts.append(poster_post)
-    postfile = open("posts.txt","w")
-    cPickle.dump(posts, postfile)
-    postfile.close()
+        i += 1
+        postfile = open("posts.txt","a")
+        postfile.write(str(poster_post))
+        postfile.write("\n")
+        postfile.close()
     # url = "https://www.facebook.com/playboy/?fref=nf"
     # PostsFetch(url)
