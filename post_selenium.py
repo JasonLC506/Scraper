@@ -128,21 +128,25 @@ def Likers(likerlist):
     link_url = likerlist["url_liker"]
     driver.get(link_url)
     ########### show all #############
-    liker_old = 0
     for i in range(MAX_SHOW_MORE):
         print "%dth show more" % i
-        ele_showmore = driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div/a")
-        ele_showmore.click()
-        time.sleep(TIME_LOAD)
-        ele_likers = driver.find_elements_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']\
-        /li//a[@class ='_5i_s _8o _8r lfloat _ohe']")
-        if len(ele_likers) == liker_old:
+        try:
+            ele_showmore = driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div/a")
+            ele_showmore.click()
+            time.sleep(TIME_LOAD)
+            ele_likers = driver.find_elements_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']\
+            /li//a[@class ='_5i_s _8o _8r lfloat _ohe']")
+            # if len(ele_likers) == liker_old:
+            #     print "no more"
+            #     break
+            # else:
+            #     liker_old = len(ele_likers)
+            time_sleep = random.random() * TIME_SCROLL
+            time.sleep(time_sleep)
+        except exceptions.NoSuchElementException, e:
             print "no more"
+            print "got %d likers in this post" % (len(ele_likers))
             break
-        else:
-            liker_old = len(ele_likers)
-        time_sleep = random.random() * TIME_SCROLL
-        time.sleep(time_sleep)
     ########## write to list ###########
     ele_ul = driver.find_element_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']")
     ele_lis = ele_ul.find_elements_by_xpath("./li")
@@ -170,10 +174,17 @@ def TimeParse(str):
         #### hrs or mins
         return datetime.now() # approximate now
     else:
+        ##### days or years #######
         if len(words[1]) == 1:
             words[1] = "0" + words[1]
+        elif len(words[1]) > 2:
+            return date_early
         time_post = words[0] + words[1] + " 2016"
-        time_post = datetime.strptime(time_post, "%B%d %Y")
+        try:
+            time_post = datetime.strptime(time_post, "%B%d %Y")
+        except:
+            print "error parsing ", time_post
+            return date_early
         return time_post
         
 if __name__ =="__main__":

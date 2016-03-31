@@ -67,28 +67,33 @@ def PosterPost(root, posters):
     for url_liker in url_likers:
         driver.get(url_liker)
         ########### show all #############
-        liker_old = 0
+        # liker_old = 0
         for i in range(MAX_SHOW_MORE):
             print "%dth show more" % i
-            ele_showmore = driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div/a")
-            ele_showmore.click()
-            time.sleep(TIME_LOAD)
-            ele_likers = driver.find_elements_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']\
-            /li//a[@class ='_5i_s _8o _8r lfloat _ohe']")
-            if len(ele_likers) == liker_old:
+            try:
+                ele_showmore = driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div/a")
+                ele_showmore.click()
+                time.sleep(TIME_LOAD)
+                ele_likers = driver.find_elements_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']\
+                /li//a[@class ='_5i_s _8o _8r lfloat _ohe']")
+                # if len(ele_likers) == liker_old:
+                #     print "no more"
+                #     break
+                # else:
+                #     liker_old = len(ele_likers)
+                resultfile = open("poster.txt", "a")
+                for ele_liker in ele_likers:
+                    liker = ele_liker.get_attribute("href")
+                    if liker not in posters:
+                        posters.append(liker)
+                        resultfile.write("%s\n" % liker)
+                resultfile.close()
+                time_sleep = random.random() * TIME_SCROLL
+                time.sleep(time_sleep)
+            except exceptions.NoSuchElementException, e:
                 print "no more"
+                print "got %d likers in this post" % (len(ele_likers))
                 break
-            else:
-                liker_old = len(ele_likers)
-            resultfile = open("poster.txt", "a")
-            for ele_liker in ele_likers:
-                liker = ele_liker.get_attribute("href")
-                if liker not in posters:
-                    posters.append(liker)
-                    resultfile.write("%s\n" % liker)
-            resultfile.close()
-            time_sleep = random.random() * TIME_SCROLL
-            time.sleep(time_sleep)
         print "%d posters until now" % len(posters)
         print datetime.now()
         time_sleep = random.random() * TIME_NEWPAGE
@@ -97,7 +102,13 @@ def PosterPost(root, posters):
 
 
 def PosterBSF(root, depth=1):
-    posters = []
+    try:
+        resultfile = open("poster.txt","r")
+        posters = resultfile.readlines()
+        posters = map(lambda x: x.rstrip(),posters)
+        resultfile.close()
+    except:
+        posters = []
     posters = PosterPost(root, posters)
     ind_new_poster = 0
     for d in range(depth - 1):
