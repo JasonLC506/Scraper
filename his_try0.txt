@@ -1,1 +1,0 @@
-simple urllib2 combined with BeautifulSoup is not suffient to crawl facebook posts since infinite scroll is not able to simulated right now.
