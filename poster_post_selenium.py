@@ -7,7 +7,6 @@ from datetime import datetime
 import random
 from post_selenium import TimeParse
 
-
 driver = webdriver.Firefox()
 driver.implicitly_wait(30)
 facebook_login = "http://www.facebook.com/login.php"
@@ -19,12 +18,13 @@ driver.find_element_by_id("pass").send_keys("%s" % uspsw)
 driver.find_element_by_name("login").submit()
 time.sleep(1)
 
+
 DATE_LAUNCH = datetime.strptime("March01 2016", "%B%d %Y")
 TIME_SCROLL = 20
 TIME_NEWPAGE = 10
 TIME_LOAD = 2
 MAX_SHOW_MORE = 10000
-
+MAX_POST_PER = 10
 
 def PosterPost(root, posters):
     ##### BFS find large set of poster through post-like relation ####
@@ -39,7 +39,7 @@ def PosterPost(root, posters):
         print "no posts"
         return posters
     old_len = 0
-    while len(ele_posts) > old_len:
+    while len(ele_posts) > old_len and old_len < MAX_POST_PER:
         old_len = len(ele_posts)
         print "old_len is %d" % old_len
         ele_html.send_keys(Keys.END)
@@ -48,8 +48,13 @@ def PosterPost(root, posters):
         print "new_len is %d" % len(ele_posts)
         ####### later than emoticon launch ######
         ele_post = ele_posts[len(ele_posts) - 1]
-        ele_time_post = ele_post.find_element_by_xpath(".//span[@class='timestampContent']")
-        time_post = TimeParse(ele_time_post.text)
+        try:
+            ele_time_post = ele_post.find_element_by_xpath(".//span[@class='timestampContent']")
+            time_post = TimeParse(ele_time_post.text)
+        except:
+            print "error: ele_time_post not found"
+            continue
+
         if time_post < DATE_LAUNCH:
             print "too early"
             break
@@ -67,7 +72,7 @@ def PosterPost(root, posters):
     for url_liker in url_likers:
         driver.get(url_liker)
         ########### show all #############
-        # liker_old = 0
+        liker_new = 0
         for i in range(MAX_SHOW_MORE):
             print "%dth show more" % i
             try:
@@ -87,7 +92,10 @@ def PosterPost(root, posters):
                     if liker not in posters:
                         posters.append(liker)
                         resultfile.write("%s\n" % liker)
+                        liker_new += 1
                 resultfile.close()
+                print datetime.now()
+                print "already %d new poster from this post" % liker_new
                 time_sleep = random.random() * TIME_SCROLL
                 time.sleep(time_sleep)
             except exceptions.NoSuchElementException, e:
@@ -121,5 +129,6 @@ def PosterBSF(root, depth=1):
 
 
 if __name__ == "__main__":
+
     posters = PosterBSF("https://www.facebook.com/zuck")
     print len(posters)

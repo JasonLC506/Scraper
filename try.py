@@ -6,7 +6,7 @@
     # posts = poster_post[poster]
     # for post in posts:
         # print post["likerlist"]["url_liker"]
-file = open("poster_set.txt","r")
+file = open("poster.txt","r")
 posters = file.readlines()
 posters = map(lambda x: x.rstrip(), posters)
 n = 0

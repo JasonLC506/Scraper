@@ -1,3 +1,4 @@
+from __future__ import print_function
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -7,17 +8,6 @@ from datetime import datetime
 import random
 from NumberParse import NumberParse
 
-
-driver = webdriver.Firefox()
-driver.implicitly_wait(30)
-facebook_login = "http://www.facebook.com/login.php"
-usemail = "jasonzhanglc3@gmail.com"
-uspsw = "1992928zjs"
-driver.get(facebook_login)
-driver.find_element_by_id("email").send_keys("%s" % usemail)
-driver.find_element_by_id("pass").send_keys("%s" % uspsw)
-driver.find_element_by_name("login").submit()
-time.sleep(1)
 
 
 
@@ -35,8 +25,8 @@ def PostsFetch(url):
     ele_html = driver.find_element_by_tag_name("html")
     try:
         ele_posts = driver.find_elements_by_xpath("//div[@class='userContentWrapper _5pcr']")
-    except exceptions.NoSuchElementException, e:
-        print "no posts"
+    except exceptions.NoSuchElementException as e:
+        print ("no posts")
         return posts
     old_len = 0
     while len(ele_posts) > old_len and old_len < MAX_POSTS_PER:
@@ -46,19 +36,27 @@ def PostsFetch(url):
         ele_posts = driver.find_elements_by_xpath("//div[@class='userContentWrapper _5pcr']")
         ####### later than emoticon launch ######
         ele_post = ele_posts[len(ele_posts) - 1]
-        ele_time_post = ele_post.find_element_by_xpath(".//span[@class='timestampContent']")
-        time_post = TimeParse(ele_time_post.text)
+        try:
+            ele_time_post = ele_post.find_element_by_xpath(".//span[@class='timestampContent']")
+            time_post = TimeParse(ele_time_post.text)
+        except:
+            print ("error: ele_time_post not found")
+            continue
         if time_post < DATE_LAUNCH:
             break
         time_sleep = random.random() * TIME_SCROLL
         time.sleep(time_sleep)
 
     ######### scrape posts ############
-    print len(ele_posts)
+    print (len(ele_posts))
     for ele_post in ele_posts:
         ########## later than emoticon launch ##########
-        ele_time_post = ele_post.find_element_by_xpath(".//span[@class='timestampContent']")
-        time_post = TimeParse(ele_time_post.text)
+        try:
+            ele_time_post = ele_post.find_element_by_xpath(".//span[@class='timestampContent']")
+            time_post = TimeParse(ele_time_post.text)
+        except:
+            print ("error: ele_time_post not found")
+            continue
         if time_post < DATE_LAUNCH:
             break # default the post order in ele_posts is temporal
 
@@ -72,14 +70,14 @@ def PostsFetch(url):
             ele_url_post = ele_post.find_element_by_xpath(".//a[@class = '_5pcq']")
             url_post = ele_url_post.get_attribute("href")
         except exceptions.NoSuchElementException, e:
-            print "inormal post"
+            print ("inormal post")
             continue
         ####### text ###########
         try:
             ele_text = ele_post.find_element_by_xpath(".//div[@class='_5pbx userContent']/p")
             text = ele_text.text
         except exceptions.NoSuchElementException, e:
-            print "no text"
+            print ("no text")
             #continue
         ####### url_liker #########
         try:
@@ -87,7 +85,7 @@ def PostsFetch(url):
             link_url = ele_liker_link.get_attribute("href")
             likerlist["url_liker"] = link_url
         except exceptions.NoSuchElementException, e:
-            print "no likes"
+            print ("no likes")
             continue
         ####### liker numbers #########
         ele_liker_link = ele_post.find_element_by_xpath(".//a[@class='_2x4v']")
@@ -103,7 +101,7 @@ def PostsFetch(url):
                 num = NumberParse(words[1])
                 emoticons[emoticon] = num
             except exceptions.NoSuchElementException, e:
-                print "no likes"
+                print ("no likes")
         for ele_emoticon in ele_emoticons:
             emoticonstatus = ele_emoticon.get_attribute("aria-label")
             words = emoticonstatus.split()
@@ -112,7 +110,7 @@ def PostsFetch(url):
             emoticons[emoticon] = num
         time_sleep = random.random() * TIME_SCROLL
         time.sleep(time_sleep)
-        print emoticons
+        print (emoticons)
 
         post = {"url_post": url_post, "emoticons": emoticons, "text": text, "likerlist": likerlist}
         posts.append(post)
@@ -121,7 +119,7 @@ def PostsFetch(url):
     #     post["likerlist"] = Likers(post["likerlist"])
     #     time_sleep = random.random() * TIME_NEWPAGE
     #     time.sleep(time_sleep)
-    print posts
+    print (posts)
     return posts
 
 def Likers(likerlist):
@@ -129,7 +127,7 @@ def Likers(likerlist):
     driver.get(link_url)
     ########### show all #############
     for i in range(MAX_SHOW_MORE):
-        print "%dth show more" % i
+        print ("%dth show more" % i)
         try:
             ele_showmore = driver.find_element_by_xpath("//div[@class = 'clearfix mtm uiMorePager stat_elem _52jv']/div/a")
             ele_showmore.click()
@@ -144,8 +142,8 @@ def Likers(likerlist):
             time_sleep = random.random() * TIME_SCROLL
             time.sleep(time_sleep)
         except exceptions.NoSuchElementException, e:
-            print "no more"
-            print "got %d likers in this post" % (len(ele_likers))
+            print ("no more")
+            print ("got %d likers in this post" % (len(ele_likers)))
             break
     ########## write to list ###########
     ele_ul = driver.find_element_by_xpath("//ul[@class ='uiList _5i_n _4kg _6-h _6-j _6-i']")
@@ -166,7 +164,7 @@ def TimeParse(str):
     date_early = datetime.strptime("January01 2016","%B%d %Y")
     words = str.split()
     if len(words)<2:
-        print words
+        print (words)
         return date_early
     if "," in words[1]:
         return date_early
@@ -183,11 +181,23 @@ def TimeParse(str):
         try:
             time_post = datetime.strptime(time_post, "%B%d %Y")
         except:
-            print "error parsing ", time_post
+            print ("error parsing ", time_post)
             return date_early
         return time_post
         
 if __name__ =="__main__":
+
+    driver = webdriver.Firefox()
+    driver.implicitly_wait(30)
+    facebook_login = "http://www.facebook.com/login.php"
+    usemail = "jasonzhanglc3@gmail.com"
+    uspsw = "1992928zjs"
+    driver.get(facebook_login)
+    driver.find_element_by_id("email").send_keys("%s" % usemail)
+    driver.find_element_by_id("pass").send_keys("%s" % uspsw)
+    driver.find_element_by_name("login").submit()
+    time.sleep(1)
+
     posts = []
     n = 10000    ### crawl n posters
     posterfile = open("poster.txt","r")
@@ -199,11 +209,12 @@ if __name__ =="__main__":
     posters = []
     for i in range(n):
         posters.append(posterfile.readline())
-    print "total %d posters" % len(posters)
+    print ("total %d posters" % len(posters))
     posterfile.close()
     i = k
     for poster in posters:
-        print "%dth poster" % (i+1)
+        print ("%dth poster" % (i+1))
+        print (datetime.now())
         url = poster.rstrip()
         poster_post = {}
         poster_post[url]=PostsFetch(url)
